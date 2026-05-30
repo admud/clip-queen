@@ -16,13 +16,11 @@ export async function POST(req: Request) {
     typeof body.cta.text !== "string" ||
     (body.cta.style !== "bottomBanner" && body.cta.style !== "cornerWatermark")
   ) {
-    return NextResponse.json(
-      { error: "Invalid request" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
   const items = generateSchedule(body as ScheduleInput);
   const response: ScheduleResponse = { items };
   return NextResponse.json(response);
 }
+

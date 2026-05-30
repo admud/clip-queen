@@ -1,8 +1,8 @@
 "use client";
 
 import { Play, Sparkles, Wand2 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useMemo, useRef, useState } from "react";
 
 type Chapter = {
   key: string;
@@ -47,9 +47,8 @@ export function TrailerPlayer() {
               </h1>
 
               <p className="mt-4 max-w-2xl text-pretty text-base leading-7 text-white/70">
-                Pick a niche, select a viral short, add your CTA overlay, and
-                auto-generate a 7-day posting plan for TikTok, Instagram, and
-                YouTube.
+                Pick a niche, select a viral short, add your CTA overlay, and auto-generate a 7-day
+                posting plan for TikTok, Instagram, and YouTube.
               </p>
             </div>
 
@@ -62,13 +61,9 @@ export function TrailerPlayer() {
                   >
                     <div className="flex items-center gap-2 text-white/80">
                       <m.icon className="h-4 w-4" />
-                      <span className="text-xs font-medium tracking-wide">
-                        {m.label}
-                      </span>
+                      <span className="text-xs font-medium tracking-wide">{m.label}</span>
                     </div>
-                    <div className="mt-1 text-base font-semibold text-white">
-                      {m.value}
-                    </div>
+                    <div className="mt-1 text-base font-semibold text-white">{m.value}</div>
                   </div>
                 ))}
               </div>
@@ -131,10 +126,8 @@ export function TrailerPlayer() {
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-white/70">
                 Drop your exported PixVerse video at{" "}
-                <span className="font-mono text-white/90">
-                  public/trailer.mp4
-                </span>{" "}
-                to replace this player’s source.
+                <span className="font-mono text-white/90">public/trailer.mp4</span> to replace this
+                player’s source.
               </div>
             </div>
           </div>
@@ -143,3 +136,4 @@ export function TrailerPlayer() {
     </section>
   );
 }
+

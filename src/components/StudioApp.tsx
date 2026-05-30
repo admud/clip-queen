@@ -1,36 +1,23 @@
 "use client";
 
-import {
-  ChevronLeft,
-} from "lucide-react";
-import { useMemo, useState } from "react";
+import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-
-import { mockClips, niches } from "@/lib/mockClips";
-import type {
-  CtaStyle,
-  GenerateInput,
-  GeneratedVideo,
-  Platform,
-  ScheduleItem,
-} from "@/lib/types";
+import { useMemo, useState } from "react";
 
 import { InputsPanel } from "@/components/studio/InputsPanel";
 import { ViralFeed } from "@/components/studio/ViralFeed";
 import { CtaPreview } from "@/components/studio/CtaPreview";
-import { ScheduleOutput } from "@/components/studio/ScheduleOutput";
 import { GeneratedVideos } from "@/components/studio/GeneratedVideos";
+import { ScheduleOutput } from "@/components/studio/ScheduleOutput";
 import { clampPostsPerDay } from "@/components/studio/constants";
 import { downloadJson } from "@/components/studio/utils";
+import { mockClips, niches } from "@/lib/mockClips";
+import type { CtaStyle, GenerateInput, GeneratedVideo, Platform, ScheduleItem } from "@/lib/types";
 
 export function StudioApp() {
   const [niche, setNiche] = useState<string>(niches[0] ?? "Creator tools");
   const [prompt, setPrompt] = useState<string>("");
-  const [platforms, setPlatforms] = useState<Platform[]>([
-    "tiktok",
-    "instagram",
-    "youtube",
-  ]);
+  const [platforms, setPlatforms] = useState<Platform[]>(["tiktok", "instagram", "youtube"]);
   const [postsPerDay, setPostsPerDay] = useState<number>(3);
   const [selectedClipId, setSelectedClipId] = useState<string>(mockClips[0]?.id ?? "");
   const [ctaText, setCtaText] = useState<string>("Get the app");
@@ -40,10 +27,7 @@ export function StudioApp() {
   const [videos, setVideos] = useState<GeneratedVideo[] | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const filteredClips = useMemo(
-    () => mockClips.filter((c) => c.niche === niche),
-    [niche],
-  );
+  const filteredClips = useMemo(() => mockClips.filter((c) => c.niche === niche), [niche]);
 
   const selectedClip = useMemo(
     () => mockClips.find((c) => c.id === selectedClipId) ?? filteredClips[0],
@@ -78,9 +62,7 @@ export function StudioApp() {
               <ChevronLeft className="h-4 w-4" />
               Back
             </Link>
-            <div className="text-sm font-semibold tracking-wide">
-              clip-queen Studio
-            </div>
+            <div className="text-sm font-semibold tracking-wide">clip-queen Studio</div>
           </div>
           <div className="hidden items-center gap-2 text-xs text-white/60 md:flex">
             Demo-only: mock clips + exportable schedule plan
@@ -126,10 +108,7 @@ export function StudioApp() {
                   body: JSON.stringify(input),
                 });
                 if (!res.ok) throw new Error("generate_failed");
-                const data = (await res.json()) as {
-                  schedule: ScheduleItem[];
-                  videos: GeneratedVideo[];
-                };
+                const data = (await res.json()) as { schedule: ScheduleItem[]; videos: GeneratedVideo[] };
                 setSchedule(data.schedule);
                 setVideos(data.videos);
               } finally {
@@ -170,3 +149,4 @@ export function StudioApp() {
     </div>
   );
 }
+

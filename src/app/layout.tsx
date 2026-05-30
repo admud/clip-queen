@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Geist_Mono, IBM_Plex_Sans } from "next/font/google";
+
 import "./globals.css";
 
 const displayFont = Bricolage_Grotesque({
@@ -37,3 +38,4 @@ export default function RootLayout({
     </html>
   );
 }
+
