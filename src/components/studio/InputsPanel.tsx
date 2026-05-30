@@ -47,7 +47,7 @@ function TogglePill({
       className={[
         "rounded-full border px-3 py-1 text-xs font-medium transition",
         active
-          ? "border-white/20 bg-white/10 text-white"
+          ? "border-[#B6FF3B]/60 bg-[#B6FF3B]/15 text-white shadow-[0_0_0_1px_rgba(182,255,59,0.14)]"
           : "border-white/10 bg-white/[0.03] text-white/70 hover:border-white/20 hover:bg-white/[0.06]",
       ].join(" ")}
     >
@@ -70,7 +70,7 @@ function CheckboxPill({
       className={[
         "cursor-pointer select-none rounded-full border px-3 py-1 text-xs font-medium transition",
         checked
-          ? "border-white/20 bg-white/10 text-white"
+          ? "border-[#B6FF3B]/60 bg-[#B6FF3B]/15 text-white shadow-[0_0_0_1px_rgba(182,255,59,0.14)]"
           : "border-white/10 bg-white/[0.03] text-white/70 hover:border-white/20 hover:bg-white/[0.06]",
       ].join(" ")}
     >
@@ -156,7 +156,7 @@ export function InputsPanel(props: Props) {
             <input
               type="range"
               min={1}
-              max={6}
+              max={5}
               value={props.postsPerDay}
               onInput={(e) => {
                 props.onPostsPerDayChange(Number((e.target as HTMLInputElement).value));

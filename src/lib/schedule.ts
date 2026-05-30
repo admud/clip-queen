@@ -9,7 +9,7 @@ function dayLabel(dayOffset: number) {
 
 export function generateSchedule(input: ScheduleInput): ScheduleItem[] {
   const days = 7;
-  const perDay = Math.max(1, Math.min(6, Math.floor(input.postsPerDay)));
+  const perDay = Math.max(1, Math.min(5, Math.floor(input.postsPerDay)));
   const platforms: ScheduleInput["platforms"] = input.platforms.length ? input.platforms : ["tiktok"];
 
   const items: ScheduleItem[] = [];
