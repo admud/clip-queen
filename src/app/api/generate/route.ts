@@ -14,6 +14,15 @@ function isPlatform(value: unknown): value is Platform {
   return value === "tiktok" || value === "instagram" || value === "youtube";
 }
 
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((v) => typeof v === "string");
+}
+
+function normalizeQuality(value: unknown) {
+  if (value === "360p" || value === "540p" || value === "720p" || value === "1080p") return value;
+  return null;
+}
+
 export async function POST(req: Request) {
   const body = (await req.json()) as Partial<GenerateInput>;
 
@@ -39,6 +48,11 @@ export async function POST(req: Request) {
   const platform = input.platforms[0] ?? "tiktok";
   const videoCount = Math.max(1, Math.min(5, Math.floor(input.postsPerDay)));
   const seedBase = randomInt(0, 2_147_483_647 - videoCount);
+  const demoFallback = req.headers.get("x-demo-fallback") === "1";
+
+  const prompts = isStringArray(input.prompts)
+    ? input.prompts.map((p) => p.trim()).filter(Boolean).slice(0, 5)
+    : [];
 
   const pixversePrompt = [
     input.prompt.trim()
@@ -49,9 +63,20 @@ export async function POST(req: Request) {
     .filter(Boolean)
     .join("\n");
 
+  const model = typeof input.video?.model === "string" && input.video.model.trim() ? input.video.model.trim() : "v6";
+  const aspectRatio =
+    typeof input.video?.aspectRatio === "string" && input.video.aspectRatio.trim()
+      ? input.video.aspectRatio.trim()
+      : "9:16";
+  const durationRaw = typeof input.video?.duration === "number" ? input.video.duration : 5;
+  const duration = Math.max(1, Math.min(15, Math.round(durationRaw)));
+  const quality = normalizeQuality(input.video?.quality) ?? "720p";
+  const generateAudio = Boolean(input.video?.generateAudio);
+
   const videos: GeneratedVideo[] = [];
 
   for (let i = 0; i < videoCount; i += 1) {
+    const scenePrompt = prompts[i] ? prompts[i] : pixversePrompt;
     if (!apiKey) {
       videos.push({
         id: `v_${platform}_${nonce}_${i}`,
@@ -75,12 +100,13 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        aspect_ratio: "9:16",
-        duration: 5,
-        model: "v6",
-        prompt: `${pixversePrompt}\n\nVariant: ${i + 1}/${videoCount}`,
-        quality: "720p",
+        aspect_ratio: aspectRatio,
+        duration,
+        model,
+        prompt: `${scenePrompt}\n\nVariant: ${i + 1}/${videoCount}`,
+        quality,
         seed: seedBase + i,
+        generate_audio_switch: generateAudio,
       }),
     });
 
@@ -98,6 +124,27 @@ export async function POST(req: Request) {
         errCode: json.ErrCode ?? null,
         errMsg: json.ErrMsg ?? null,
       });
+
+      if (demoFallback) {
+        videos.push({
+          id: `v_${platform}_${nonce}_${i}`,
+          platform,
+          provider: "demo",
+          providerId: null,
+          status: "ready",
+          url: `/trailer.mp4?p=${platform}&v=${nonce}&i=${i}`,
+          error: {
+            httpStatus: res.status,
+            code: json.ErrCode ?? null,
+            message: json.ErrMsg ?? null,
+          },
+          prompt: input.prompt,
+          ctaPrompt: input.ctaPrompt,
+          cta: input.cta,
+        });
+        continue;
+      }
+
       videos.push({
         id: `v_${platform}_${nonce}_${i}`,
         platform,
@@ -130,6 +177,6 @@ export async function POST(req: Request) {
     });
   }
 
-  const response: GenerateResponse = { schedule: [], videos };
+  const response: GenerateResponse = { schedule: [], videos, trae: input.trae };
   return NextResponse.json(response);
 }

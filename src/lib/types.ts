@@ -43,6 +43,28 @@ export type ScheduleResponse = {
 export type GenerateInput = ScheduleInput & {
   prompt: string;
   ctaPrompt: string;
+  prompts?: string[];
+  video?: {
+    model?: string;
+    aspectRatio?: string;
+    duration?: number;
+    quality?: string;
+    generateAudio?: boolean;
+  };
+  trae?: {
+    presetId?: string;
+    storyboard?: StoryboardScene[];
+    timingsMs?: {
+      storyboard?: number;
+      variants?: number;
+    };
+  };
+};
+
+export type StoryboardScene = {
+  id: string;
+  title: string;
+  prompt: string;
 };
 
 export type GeneratedVideoProvider = "demo" | "pixverse";
@@ -74,4 +96,5 @@ export type GeneratedVideo = {
 export type GenerateResponse = {
   schedule: ScheduleItem[];
   videos: GeneratedVideo[];
+  trae?: GenerateInput["trae"];
 };

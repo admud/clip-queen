@@ -2,16 +2,25 @@
 
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { InputsPanel } from "@/components/studio/InputsPanel";
 import { ViralFeed } from "@/components/studio/ViralFeed";
 import { CtaPreview } from "@/components/studio/CtaPreview";
 import { GeneratedVideos } from "@/components/studio/GeneratedVideos";
+import { VideoPreviewModal } from "@/components/studio/VideoPreviewModal";
+import { TraePipeline } from "@/components/studio/TraePipeline";
 import { clampPostsPerDay } from "@/components/studio/constants";
 import { downloadJson } from "@/components/studio/utils";
 import { mockClips, niches } from "@/lib/mockClips";
-import type { CtaStyle, GenerateInput, GeneratedVideo, Platform } from "@/lib/types";
+import { buildScenePrompt, generatePromptVariants, generateStoryboard, getStylePreset } from "@/lib/trae";
+import type { CtaStyle, GenerateInput, GeneratedVideo, Platform, StoryboardScene } from "@/lib/types";
+
+type TimingsMs = {
+  storyboard?: number;
+  variants?: number;
+};
 
 function mapPixverseStatus(status: number | null): GeneratedVideo["status"] {
   if (status === null) return "queued";
@@ -25,6 +34,7 @@ function mapPixverseStatus(status: number | null): GeneratedVideo["status"] {
 }
 
 export function StudioApp() {
+  const router = useRouter();
   const [niche, setNiche] = useState<string>(niches[0] ?? "Creator tools");
   const [prompt, setPrompt] = useState<string>("");
   const [platform, setPlatform] = useState<Platform>("tiktok");
@@ -33,8 +43,17 @@ export function StudioApp() {
   const [ctaText, setCtaText] = useState<string>("Get the app");
   const [ctaStyle, setCtaStyle] = useState<CtaStyle>("bottomBanner");
   const [ctaPrompt, setCtaPrompt] = useState<string>("");
+  const [presetId, setPresetId] = useState<string>(getStylePreset(undefined).id);
+  const [storyboard, setStoryboard] = useState<StoryboardScene[] | null>(null);
+  const [promptVariants, setPromptVariants] = useState<string[] | null>(null);
+  const [timingsMs, setTimingsMs] = useState<TimingsMs | null>(null);
+  const [videoDuration, setVideoDuration] = useState<number>(5);
+  const [videoQuality, setVideoQuality] = useState<string>("720p");
+  const [generateAudio, setGenerateAudio] = useState<boolean>(false);
+  const [demoFallback, setDemoFallback] = useState<boolean>(true);
   const [videos, setVideos] = useState<GeneratedVideo[] | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const filteredClips = useMemo(() => mockClips.filter((c) => c.niche === niche), [niche]);
 
@@ -42,6 +61,20 @@ export function StudioApp() {
     () => mockClips.find((c) => c.id === selectedClipId) ?? filteredClips[0],
     [filteredClips, selectedClipId],
   );
+
+  const scenePrompts = useMemo(() => {
+    if (!storyboard?.length) return null;
+    return storyboard
+      .map((scene) =>
+        buildScenePrompt({
+          scene,
+          presetId,
+          basePrompt: prompt,
+          ctaPrompt,
+        }),
+      )
+      .slice(0, 5);
+  }, [ctaPrompt, presetId, prompt, storyboard]);
 
   const input: GenerateInput = useMemo(
     () => ({
@@ -52,8 +85,37 @@ export function StudioApp() {
       cta: { text: ctaText, style: ctaStyle },
       prompt,
       ctaPrompt,
+      prompts: scenePrompts ?? undefined,
+      video: {
+        model: "v6",
+        aspectRatio: "9:16",
+        duration: videoDuration,
+        quality: videoQuality,
+        generateAudio,
+      },
+      trae: {
+        presetId,
+        storyboard: storyboard ?? undefined,
+        timingsMs: timingsMs ?? undefined,
+      },
     }),
-    [ctaPrompt, ctaStyle, ctaText, niche, platform, postsPerDay, prompt, selectedClip?.id],
+    [
+      ctaPrompt,
+      ctaStyle,
+      ctaText,
+      generateAudio,
+      niche,
+      platform,
+      postsPerDay,
+      presetId,
+      prompt,
+      scenePrompts,
+      selectedClip?.id,
+      storyboard,
+      timingsMs,
+      videoDuration,
+      videoQuality,
+    ],
   );
 
   useEffect(() => {
@@ -152,6 +214,14 @@ export function StudioApp() {
             onPlatformChange={(next) => setPlatform(next)}
             postsPerDay={postsPerDay}
             onPostsPerDayChange={(v) => setPostsPerDay(v)}
+            videoDuration={videoDuration}
+            onVideoDurationChange={(v) => setVideoDuration(v)}
+            videoQuality={videoQuality}
+            onVideoQualityChange={(v) => setVideoQuality(v)}
+            generateAudio={generateAudio}
+            onGenerateAudioChange={(v) => setGenerateAudio(v)}
+            demoFallback={demoFallback}
+            onDemoFallbackChange={(v) => setDemoFallback(v)}
             ctaText={ctaText}
             onCtaTextChange={(v) => setCtaText(v)}
             ctaStyle={ctaStyle}
@@ -161,18 +231,47 @@ export function StudioApp() {
             isGenerating={isGenerating}
             canGenerate={Boolean(selectedClip?.id)}
             hasVideos={Boolean(videos?.length)}
+            hasStoryboard={Boolean(storyboard?.length)}
+            onGenerateStoryboard={() => {
+              const start = performance.now();
+              const next = generateStoryboard({
+                niche,
+                cta: { text: ctaText, style: ctaStyle },
+                count: clampPostsPerDay(postsPerDay),
+              });
+              setStoryboard(next);
+              setTimingsMs((prev) => ({ ...prev, storyboard: Math.round(performance.now() - start) }));
+            }}
+            onGenerateVariants={() => {
+              const base = [
+                prompt.trim() ? prompt.trim() : `A viral ${niche} short video with CTA: ${ctaText}.`,
+                ctaPrompt.trim() ? ctaPrompt.trim() : null,
+                getStylePreset(presetId).promptSuffix,
+              ]
+                .filter(Boolean)
+                .join("\n");
+
+              const start = performance.now();
+              const next = generatePromptVariants({ prompt: base, count: 3 });
+              setPromptVariants(next);
+              setTimingsMs((prev) => ({ ...prev, variants: Math.round(performance.now() - start) }));
+            }}
             onGenerate={async () => {
               if (!selectedClip?.id) return;
               setIsGenerating(true);
               try {
                 const res = await fetch("/api/generate", {
                   method: "POST",
-                  headers: { "content-type": "application/json" },
+                  headers: {
+                    "content-type": "application/json",
+                    ...(demoFallback ? { "x-demo-fallback": "1" } : {}),
+                  },
                   body: JSON.stringify(input),
                 });
                 if (!res.ok) throw new Error("generate_failed");
-                const data = (await res.json()) as { videos: GeneratedVideo[] };
+                const data = (await res.json()) as { videos: GeneratedVideo[]; trae?: GenerateInput["trae"] };
                 setVideos(data.videos);
+                if (data.trae?.storyboard?.length) setStoryboard(data.trae.storyboard ?? null);
               } finally {
                 setIsGenerating(false);
               }
@@ -183,6 +282,13 @@ export function StudioApp() {
                 input,
                 clip: selectedClip ?? null,
                 videos: videos ?? [],
+                trae: {
+                  preset: getStylePreset(presetId),
+                  storyboard: storyboard ?? null,
+                  scenePrompts: scenePrompts ?? null,
+                  promptVariants: promptVariants ?? null,
+                  timingsMs: timingsMs ?? null,
+                },
               });
             }}
             onResetOutput={() => {
@@ -197,12 +303,45 @@ export function StudioApp() {
               onSelect={(clipId) => setSelectedClipId(clipId)}
             />
 
-            <GeneratedVideos videos={videos} />
+            <GeneratedVideos
+              videos={videos}
+              onPreview={(url) => setPreviewUrl(url)}
+              onUse={(video) => {
+                try {
+                  const payload = {
+                    video,
+                    ctaText,
+                    ctaStyle,
+                    niche,
+                    platform,
+                    createdAt: Date.now(),
+                  };
+                  localStorage.setItem(`clip-queen:final:${video.id}`, JSON.stringify(payload));
+                } finally {
+                  router.push(`/v/${encodeURIComponent(video.id)}`);
+                }
+              }}
+            />
+
+            <TraePipeline
+              presetId={presetId}
+              onPresetChange={(id) => setPresetId(id)}
+              storyboard={storyboard ?? null}
+              onStoryboardChange={(next) => setStoryboard(next)}
+              promptVariants={promptVariants}
+              timingsMs={timingsMs ?? null}
+            />
 
             <CtaPreview clip={selectedClip ?? null} ctaText={ctaText} ctaStyle={ctaStyle} />
           </section>
         </div>
       </main>
+
+      <VideoPreviewModal
+        open={Boolean(previewUrl)}
+        url={previewUrl}
+        onClose={() => setPreviewUrl(null)}
+      />
     </div>
   );
 }

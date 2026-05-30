@@ -4,6 +4,8 @@ import type { GeneratedVideo } from "@/lib/types";
 
 type Props = {
   videos: GeneratedVideo[] | null;
+  onPreview: (url: string) => void;
+  onUse: (video: GeneratedVideo) => void;
 };
 
 const statusLabel: Record<GeneratedVideo["status"], string> = {
@@ -14,7 +16,8 @@ const statusLabel: Record<GeneratedVideo["status"], string> = {
   moderation_failed: "Moderation failed",
 };
 
-export function GeneratedVideos({ videos }: Props) {
+export function GeneratedVideos(props: Props) {
+  const { videos } = props;
   return (
     <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
       <div className="flex items-center justify-between gap-3">
@@ -29,6 +32,9 @@ export function GeneratedVideos({ videos }: Props) {
 
       <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
         {(videos ?? []).map((video) => {
+          const canPreview = Boolean(video.url);
+          const canUse = Boolean(video.url);
+
           const content = (
             <>
               <div className="flex items-start justify-between gap-3">
@@ -55,7 +61,7 @@ export function GeneratedVideos({ videos }: Props) {
 
               <div className="mt-2 text-xs text-white/55 line-clamp-3">{video.prompt}</div>
 
-              {video.provider === "pixverse" && video.status === "failed" && video.error?.message ? (
+              {video.status === "failed" && video.error?.message ? (
                 <div className="mt-3 text-xs text-white/70 line-clamp-2">{video.error.message}</div>
               ) : null}
 
@@ -66,27 +72,38 @@ export function GeneratedVideos({ videos }: Props) {
               <div className="mt-3 rounded-full bg-white/10 px-3 py-1 text-xs text-white/80">
                 {video.cta.text}
               </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={!canPreview}
+                  onClick={() => {
+                    if (!video.url) return;
+                    props.onPreview(video.url);
+                  }}
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-white/85 transition enabled:hover:border-white/20 enabled:hover:bg-white/[0.06] disabled:opacity-40"
+                >
+                  Preview
+                </button>
+                <button
+                  type="button"
+                  disabled={!canUse}
+                  onClick={() => props.onUse(video)}
+                  className="rounded-2xl bg-[#B6FF3B] px-3 py-2 text-xs font-semibold text-black transition enabled:hover:bg-[#c7ff63] disabled:opacity-40"
+                >
+                  Use this clip
+                </button>
+              </div>
             </>
           );
-
-          if (video.url) {
-            return (
-              <a
-                key={video.id}
-                href={video.url}
-                target="_blank"
-                rel="noreferrer"
-                className="block rounded-2xl border border-white/10 bg-black/10 p-4 transition hover:border-white/20 hover:bg-white/[0.06]"
-              >
-                {content}
-              </a>
-            );
-          }
 
           return (
             <div
               key={video.id}
-              className="block rounded-2xl border border-white/10 bg-black/10 p-4"
+              className={[
+                "block rounded-2xl border border-white/10 bg-black/10 p-4",
+                video.url ? "transition hover:border-white/20 hover:bg-white/[0.06]" : "",
+              ].join(" ")}
             >
               {content}
             </div>

@@ -14,6 +14,14 @@ type Props = {
   onPlatformChange: (value: Platform) => void;
   postsPerDay: number;
   onPostsPerDayChange: (value: number) => void;
+  videoDuration: number;
+  onVideoDurationChange: (value: number) => void;
+  videoQuality: string;
+  onVideoQualityChange: (value: string) => void;
+  generateAudio: boolean;
+  onGenerateAudioChange: (value: boolean) => void;
+  demoFallback: boolean;
+  onDemoFallbackChange: (value: boolean) => void;
   ctaText: string;
   onCtaTextChange: (value: string) => void;
   ctaStyle: CtaStyle;
@@ -23,6 +31,9 @@ type Props = {
   isGenerating: boolean;
   canGenerate: boolean;
   hasVideos: boolean;
+  hasStoryboard: boolean;
+  onGenerateStoryboard: () => void;
+  onGenerateVariants: () => void;
   onGenerate: () => void | Promise<void>;
   onExport: () => void;
   onResetOutput: () => void;
@@ -131,6 +142,96 @@ export function InputsPanel(props: Props) {
           </div>
         </div>
 
+        <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-white/60">
+                PixVerse settings
+              </div>
+              <div className="mt-1 text-xs text-white/55">Quality, duration, and audio.</div>
+            </div>
+            <Sparkles className="h-4 w-4 text-white/60" />
+          </div>
+
+          <div className="mt-4 space-y-4">
+            <div>
+              <div className="text-xs font-medium text-white/70">Quality</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {["540p", "720p", "1080p"].map((q) => (
+                  <TogglePill
+                    key={q}
+                    active={props.videoQuality === q}
+                    label={q}
+                    onClick={() => props.onVideoQualityChange(q)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-xs font-medium text-white/70">Duration (seconds)</div>
+              <div className="mt-2 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+                <input
+                  type="range"
+                  min={1}
+                  max={15}
+                  value={props.videoDuration}
+                  onInput={(e) => {
+                    props.onVideoDurationChange(Number((e.target as HTMLInputElement).value));
+                  }}
+                  onChange={(e) => props.onVideoDurationChange(Number(e.target.value))}
+                  className="w-full"
+                />
+                <div className="w-10 text-right text-sm font-semibold text-white">
+                  {props.videoDuration}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-white/60">Audio</div>
+                <div className="mt-1 text-xs text-white/55">Generate with sound (if supported).</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => props.onGenerateAudioChange(!props.generateAudio)}
+                className={[
+                  "rounded-full border px-3 py-1 text-xs font-semibold transition",
+                  props.generateAudio
+                    ? "border-[#B6FF3B]/60 bg-[#B6FF3B]/15 text-white"
+                    : "border-white/10 bg-white/[0.03] text-white/70 hover:border-white/20 hover:bg-white/[0.06]",
+                ].join(" ")}
+              >
+                {props.generateAudio ? "On" : "Off"}
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-white/60">
+                  Demo fallback
+                </div>
+                <div className="mt-1 text-xs text-white/55">
+                  If PixVerse fails, still show a playable clip.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => props.onDemoFallbackChange(!props.demoFallback)}
+                className={[
+                  "rounded-full border px-3 py-1 text-xs font-semibold transition",
+                  props.demoFallback
+                    ? "border-[#B6FF3B]/60 bg-[#B6FF3B]/15 text-white"
+                    : "border-white/10 bg-white/[0.03] text-white/70 hover:border-white/20 hover:bg-white/[0.06]",
+                ].join(" ")}
+              >
+                {props.demoFallback ? "On" : "Off"}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div>
           <div className="text-xs font-semibold uppercase tracking-wide text-white/60">
             Caption Prompt
@@ -142,6 +243,32 @@ export function InputsPanel(props: Props) {
             className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-white/20"
             placeholder="Generate captions in a punchy, TikTok-native tone..."
           />
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-white/60">TRAE</div>
+            <div className="text-xs text-white/55">
+              {props.hasStoryboard ? "Storyboard ready" : "No storyboard"}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            <button
+              type="button"
+              onClick={props.onGenerateStoryboard}
+              className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white/85 transition hover:border-white/20 hover:bg-white/[0.06]"
+            >
+              Generate Storyboard
+            </button>
+            <button
+              type="button"
+              onClick={props.onGenerateVariants}
+              className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white/85 transition hover:border-white/20 hover:bg-white/[0.06]"
+            >
+              Generate Variants
+            </button>
+          </div>
         </div>
 
         <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-4">
