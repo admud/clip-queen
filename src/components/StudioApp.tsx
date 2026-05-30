@@ -17,7 +17,7 @@ import type { CtaStyle, GenerateInput, GeneratedVideo, Platform, ScheduleItem } 
 export function StudioApp() {
   const [niche, setNiche] = useState<string>(niches[0] ?? "Creator tools");
   const [prompt, setPrompt] = useState<string>("");
-  const [platforms, setPlatforms] = useState<Platform[]>(["tiktok", "instagram", "youtube"]);
+  const [platform, setPlatform] = useState<Platform>("tiktok");
   const [postsPerDay, setPostsPerDay] = useState<number>(3);
   const [selectedClipId, setSelectedClipId] = useState<string>(mockClips[0]?.id ?? "");
   const [ctaText, setCtaText] = useState<string>("Get the app");
@@ -37,14 +37,14 @@ export function StudioApp() {
   const input: GenerateInput = useMemo(
     () => ({
       niche,
-      platforms,
+      platforms: [platform],
       postsPerDay: clampPostsPerDay(postsPerDay),
       clipId: selectedClip?.id ?? "",
       cta: { text: ctaText, style: ctaStyle },
       prompt,
       ctaPrompt,
     }),
-    [ctaPrompt, ctaStyle, ctaText, niche, platforms, postsPerDay, prompt, selectedClip?.id],
+    [ctaPrompt, ctaStyle, ctaText, niche, platform, postsPerDay, prompt, selectedClip?.id],
   );
 
   return (
@@ -81,11 +81,8 @@ export function StudioApp() {
             }}
             prompt={prompt}
             onPromptChange={(v) => setPrompt(v)}
-            platforms={platforms}
-            onPlatformsChange={(next) => {
-              if (!next.length) return;
-              setPlatforms(next);
-            }}
+            platform={platform}
+            onPlatformChange={(next) => setPlatform(next)}
             postsPerDay={postsPerDay}
             onPostsPerDayChange={(v) => setPostsPerDay(v)}
             ctaText={ctaText}
@@ -95,11 +92,11 @@ export function StudioApp() {
             ctaPrompt={ctaPrompt}
             onCtaPromptChange={(v) => setCtaPrompt(v)}
             isGenerating={isGenerating}
-            canGenerate={Boolean(selectedClip?.id) && platforms.length > 0}
+            canGenerate={Boolean(selectedClip?.id)}
             hasSchedule={Boolean(schedule?.length)}
             hasVideos={Boolean(videos?.length)}
             onGenerate={async () => {
-              if (!selectedClip?.id || platforms.length === 0) return;
+              if (!selectedClip?.id) return;
               setIsGenerating(true);
               try {
                 const res = await fetch("/api/generate", {
@@ -149,4 +146,3 @@ export function StudioApp() {
     </div>
   );
 }
-

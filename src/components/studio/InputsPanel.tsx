@@ -10,8 +10,8 @@ type Props = {
   onNicheChange: (value: string) => void;
   prompt: string;
   onPromptChange: (value: string) => void;
-  platforms: Platform[];
-  onPlatformsChange: (value: Platform[]) => void;
+  platform: Platform;
+  onPlatformChange: (value: Platform) => void;
   postsPerDay: number;
   onPostsPerDayChange: (value: number) => void;
   ctaText: string;
@@ -53,35 +53,6 @@ function TogglePill({
     >
       {label}
     </button>
-  );
-}
-
-function CheckboxPill({
-  checked,
-  label,
-  onCheckedChange,
-}: {
-  checked: boolean;
-  label: string;
-  onCheckedChange: (checked: boolean) => void;
-}) {
-  return (
-    <label
-      className={[
-        "cursor-pointer select-none rounded-full border px-3 py-1 text-xs font-medium transition",
-        checked
-          ? "border-[#B6FF3B]/60 bg-[#B6FF3B]/15 text-white shadow-[0_0_0_1px_rgba(182,255,59,0.14)]"
-          : "border-white/10 bg-white/[0.03] text-white/70 hover:border-white/20 hover:bg-white/[0.06]",
-      ].join(" ")}
-    >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onCheckedChange(e.target.checked)}
-        className="sr-only"
-      />
-      {label}
-    </label>
   );
 }
 
@@ -127,25 +98,18 @@ export function InputsPanel(props: Props) {
         </div>
 
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-white/60">Platforms</div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-white/60">Platform</div>
           <div className="mt-2 flex flex-wrap gap-2">
             {allPlatforms.map((p) => (
-              <CheckboxPill
+              <TogglePill
                 key={p}
-                checked={props.platforms.includes(p)}
+                active={props.platform === p}
                 label={platformLabel[p]}
-                onCheckedChange={(checked) => {
-                  const next = checked
-                    ? props.platforms.includes(p)
-                      ? props.platforms
-                      : [...props.platforms, p]
-                    : props.platforms.filter((x) => x !== p);
-                  props.onPlatformsChange(next);
-                }}
+                onClick={() => props.onPlatformChange(p)}
               />
             ))}
           </div>
-          <div className="mt-2 text-xs text-white/55">Pick at least one platform.</div>
+          <div className="mt-2 text-xs text-white/55">MVP: single-platform scheduling.</div>
         </div>
 
         <div>
