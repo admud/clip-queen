@@ -1,0 +1,69 @@
+## 1. Product Overview
+clip-queen is a hackathon demo web app that showcases an end-to-end “viral shorts → CTA overlay → auto schedule” workflow for content creators.
+It embeds a 30s+ PixVerse-generated TikTok-style product trailer and provides interactive, exportable outputs beyond playback.
+
+## 2. Core Features
+
+### 2.1 User Roles
+Single role: Creator (no auth for MVP).
+
+### 2.2 Feature Module
+1. **Landing (/)**: trailer player with chapters, value props, “Open Studio” entry
+2. **Demo Studio (/studio)**: niche/platform inputs, viral clip selection, CTA overlay editor, auto scheduling calendar, export plan
+
+### 2.3 Page Details
+| Page Name | Module Name | Feature description |
+|-----------|-------------|---------------------|
+| Landing | Trailer Player | Plays a 30s+ vertical video (9:16) with “chapters” that jump to timestamps (Scrape / Stitch / Schedule). |
+| Landing | Value Props | Three feature cards: Scrape viral shorts, CTA stitching preview, Auto scheduling to TT/IG/YT. |
+| Landing | Studio CTA | Primary button navigates to Demo Studio. |
+| Demo Studio | Input Panel | Choose niche (preset list), platforms (TT/IG/YT toggles), desired cadence (posts/day or total/week). |
+| Demo Studio | Viral Feed | Mock “viral shorts” list filtered by niche; select one to use in the plan. |
+| Demo Studio | Clip Preview | Shows selected clip card + metadata (title, duration, source label). |
+| Demo Studio | CTA Overlay Editor | Edit CTA text, choose overlay style (e.g., bottom banner / corner watermark), live preview state updates immediately. |
+| Demo Studio | Scheduler | Generates a 7-day plan; calendar view groups by day/time/platform; supports regenerate. |
+| Demo Studio | Export | Download JSON plan with inputs, chosen clip, CTA config, and schedule items. |
+
+## 3. Core Process
+Main flow:
+1) User watches the trailer on Landing and opens the Studio.
+2) User selects niche + platforms and picks a viral clip from the feed.
+3) User configures CTA overlay text/style and previews it.
+4) User generates a 7-day schedule and exports the plan JSON for reuse.
+
+```mermaid
+flowchart TD
+  A["Open Landing"] --> B["Watch Trailer (Optional)"]
+  B --> C["Open Studio"]
+  C --> D["Select Niche + Platforms"]
+  D --> E["Pick Viral Clip"]
+  E --> F["Edit CTA Overlay"]
+  F --> G["Generate 7-Day Schedule"]
+  G --> H["Export Plan JSON"]
+```
+
+## 4. User Interface Design
+### 4.1 Design Style
+- Visual direction: TikTok-native creator tooling (UGC/product-demo vibe), bold readable typography, kinetic UI accents
+- Color palette: near-black base (#07080B), neon-lime accent (#B6FF3B), hot-pink accent (#FF2DAA), electric-blue accent (#3B82F6), neutral text (#EDEEF3)
+- Buttons: chunky rounded rectangles, high-contrast fill, subtle glow on hover/focus
+- Typography:
+  - Display: Bricolage Grotesque (bold headings)
+  - Body/UI: IBM Plex Sans (dense UI readability)
+- Layout: desktop-first; two-column Studio layout (controls left, preview/calendar right); cards with subtle borders and noise/grain background texture
+- Icon style: simple filled glyphs; platform badges for TikTok/Instagram/YouTube
+
+### 4.2 Page Design Overview
+| Page Name | Module Name | UI Elements |
+|-----------|-------------|-------------|
+| Landing | Trailer Player | Tall vertical video frame (9:16), chapter pills, subtle animated grain, sticky “Open Studio” button. |
+| Landing | Value Props | 3 feature cards with mini-illustrations (icons + animated accent lines). |
+| Demo Studio | Input Panel | Form controls with segmented toggles, chips, and inline helper text. |
+| Demo Studio | Viral Feed | Grid/list with selectable cards; selected state glow + checkmark. |
+| Demo Studio | CTA Overlay Editor | Live preview card with overlay layer; style switcher. |
+| Demo Studio | Scheduler | Calendar view with platform-colored badges and day headers; regenerate and export actions. |
+
+### 4.3 Responsiveness
+- Desktop-first with mobile-adaptive layout:
+  - Mobile stacks panels vertically; sticky bottom action bar for Generate/Export
+  - Touch-friendly targets (>= 44px) and large readable captions

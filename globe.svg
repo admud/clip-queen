@@ -1,0 +1,99 @@
+## 1. Architecture Design
+
+```mermaid
+flowchart TB
+  U["User Browser"] --> N["Next.js App (App Router)"]
+  N --> P["Pages: / and /studio"]
+  N --> C["UI Components"]
+  N --> A["Route Handlers (Optional)"]
+  C --> S["State (Client)"]
+  A --> M["Mock Data (Local JSON/TS)"]
+  P --> V["Static Video Asset: /trailer.mp4"]
+```
+
+## 2. Technology Description
+- Frontend: Next.js (App Router) + React + TypeScript
+- Styling: Tailwind CSS + CSS variables (theme tokens)
+- Data: Local mock dataset (TypeScript module) for viral clips; schedule generated in-app
+- Backend: None required for MVP; optional Next.js route handler for schedule generation
+
+## 3. Route Definitions
+| Route | Purpose |
+|-------|---------|
+| / | Landing page with PixVerse trailer (30s+), chapter jumps, and entry to Studio |
+| /studio | Interactive demo: niche/platform inputs, viral clip picker, CTA overlay editor, schedule calendar, export JSON |
+
+## 4. API Definitions (Optional)
+
+### 4.1 Types
+```ts
+export type Platform = "tiktok" | "instagram" | "youtube";
+
+export type Clip = {
+  id: string;
+  title: string;
+  niche: string;
+  durationSec: number;
+  sourceLabel: string;
+};
+
+export type CtaStyle = "bottomBanner" | "cornerWatermark";
+
+export type CtaConfig = {
+  text: string;
+  style: CtaStyle;
+};
+
+export type ScheduleInput = {
+  niche: string;
+  platforms: Platform[];
+  postsPerDay: number;
+  clipId: string;
+  cta: CtaConfig;
+};
+
+export type ScheduleItem = {
+  id: string;
+  platform: Platform;
+  datetimeISO: string;
+  clipId: string;
+  cta: CtaConfig;
+};
+
+export type ScheduleResponse = {
+  items: ScheduleItem[];
+};
+```
+
+### 4.2 Endpoints
+| Method | Endpoint | Request | Response |
+|--------|----------|---------|----------|
+| POST | /api/schedule | ScheduleInput | ScheduleResponse |
+
+## 5. Data Model
+
+### 5.1 Data Model Definition
+```mermaid
+erDiagram
+  "CLIP" ||--o{ "SCHEDULE_ITEM" : "is_used_in"
+  "CLIP" {
+    string id
+    string title
+    string niche
+    int durationSec
+    string sourceLabel
+  }
+  "SCHEDULE_ITEM" {
+    string id
+    string platform
+    string datetimeISO
+    string clipId
+    string ctaText
+    string ctaStyle
+  }
+```
+
+### 5.2 Storage Strategy
+- No database for hackathon MVP.
+- Store mock clips as a TypeScript constant.
+- Generate schedule in-memory; export as downloadable JSON.
