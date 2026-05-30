@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomInt, randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 
 import type {
@@ -38,6 +38,7 @@ export async function POST(req: Request) {
   const apiKey = process.env.PIXVERSE_API_KEY;
   const platform = input.platforms[0] ?? "tiktok";
   const videoCount = Math.max(1, Math.min(5, Math.floor(input.postsPerDay)));
+  const seedBase = randomInt(0, 2_147_483_647 - videoCount);
 
   const pixversePrompt = [
     input.prompt.trim()
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
         model: "v6",
         prompt: `${pixversePrompt}\n\nVariant: ${i + 1}/${videoCount}`,
         quality: "720p",
-        seed: nonce + i,
+        seed: seedBase + i,
       }),
     });
 
