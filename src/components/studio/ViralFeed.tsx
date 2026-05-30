@@ -20,7 +20,7 @@ export function ViralFeed({ clips, selectedClipId, onSelect }: Props) {
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="text-sm font-semibold text-white">Viral feed</div>
-          <div className="mt-1 text-xs text-white/60">Mock clips filtered by niche.</div>
+          <div className="mt-1 text-xs text-white/60">Mock clips filtered by category.</div>
         </div>
         <div className="text-xs text-white/55">{clips.length} clips</div>
       </div>
@@ -67,11 +67,10 @@ export function ViralFeed({ clips, selectedClipId, onSelect }: Props) {
 
         {!clips.length ? (
           <div className="rounded-2xl border border-white/10 bg-black/10 p-4 text-sm text-white/70">
-            No clips for this niche.
+            No clips for this category.
           </div>
         ) : null}
       </div>
     </section>
   );
 }
-

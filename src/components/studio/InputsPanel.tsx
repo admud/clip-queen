@@ -98,7 +98,7 @@ export function InputsPanel(props: Props) {
 
       <div className="mt-6 space-y-6">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-white/60">Niche</div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-white/60">Category</div>
           <input
             value={props.niche}
             onChange={(e) => props.onNicheChange(e.target.value)}

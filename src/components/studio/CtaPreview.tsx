@@ -28,7 +28,7 @@ export function CtaPreview({ clip, ctaText, ctaStyle }: Props) {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_20%,rgba(255,255,255,0.08),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent_40%)]" />
 
           <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[11px] text-white/80">
-            {clip ? clip.niche : "Niche"}
+            {clip ? clip.niche : "Category"}
           </div>
 
           {ctaStyle === "bottomBanner" ? (
@@ -48,4 +48,3 @@ export function CtaPreview({ clip, ctaText, ctaStyle }: Props) {
     </section>
   );
 }
-
