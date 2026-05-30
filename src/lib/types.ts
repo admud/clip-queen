@@ -45,10 +45,22 @@ export type GenerateInput = ScheduleInput & {
   ctaPrompt: string;
 };
 
+export type GeneratedVideoProvider = "demo" | "pixverse";
+
+export type GeneratedVideoStatus =
+  | "queued"
+  | "generating"
+  | "ready"
+  | "failed"
+  | "moderation_failed";
+
 export type GeneratedVideo = {
   id: string;
   platform: Platform;
-  url: string;
+  provider: GeneratedVideoProvider;
+  providerId: string | null;
+  status: GeneratedVideoStatus;
+  url: string | null;
   prompt: string;
   ctaPrompt: string;
   cta: Cta;
@@ -58,4 +70,3 @@ export type GenerateResponse = {
   schedule: ScheduleItem[];
   videos: GeneratedVideo[];
 };
-

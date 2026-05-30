@@ -2,7 +2,7 @@
 
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { InputsPanel } from "@/components/studio/InputsPanel";
 import { ViralFeed } from "@/components/studio/ViralFeed";
@@ -13,6 +13,13 @@ import { clampPostsPerDay } from "@/components/studio/constants";
 import { downloadJson } from "@/components/studio/utils";
 import { mockClips, niches } from "@/lib/mockClips";
 import type { CtaStyle, GenerateInput, GeneratedVideo, Platform, ScheduleItem } from "@/lib/types";
+
+function mapPixverseStatus(status: number | null): GeneratedVideo["status"] {
+  if (status === 1) return "ready";
+  if (status === 5) return "generating";
+  if (status === 7) return "moderation_failed";
+  return "failed";
+}
 
 export function StudioApp() {
   const [niche, setNiche] = useState<string>(niches[0] ?? "Creator tools");
@@ -46,6 +53,64 @@ export function StudioApp() {
     }),
     [ctaPrompt, ctaStyle, ctaText, niche, platform, postsPerDay, prompt, selectedClip?.id],
   );
+
+  useEffect(() => {
+    const pending = (videos ?? []).filter(
+      (v) =>
+        v.provider === "pixverse" &&
+        v.providerId &&
+        v.status !== "ready" &&
+        v.status !== "failed" &&
+        v.status !== "moderation_failed",
+    );
+
+    if (!pending.length) return;
+
+    let cancelled = false;
+
+    const tick = async () => {
+      const targets = (videos ?? []).filter((v) => v.provider === "pixverse" && v.providerId);
+      if (!targets.length) return;
+
+      const updates = await Promise.all(
+        targets.map(async (v) => {
+          const res = await fetch(`/api/pixverse/status?videoId=${encodeURIComponent(v.providerId!)}`);
+          if (!res.ok) {
+            return { id: v.id, status: "failed" as const, url: null as string | null };
+          }
+          const json = (await res.json()) as { status: number | null; url: string | null };
+          const status = mapPixverseStatus(json.status);
+          const url = status === "ready" ? json.url : null;
+          return { id: v.id, status, url };
+        }),
+      );
+
+      if (cancelled) return;
+
+      setVideos((prev) => {
+        if (!prev) return prev;
+        return prev.map((v) => {
+          const next = updates.find((u) => u.id === v.id);
+          if (!next) return v;
+          return {
+            ...v,
+            status: next.status,
+            url: next.url ?? v.url,
+          };
+        });
+      });
+    };
+
+    void tick();
+    const handle = window.setInterval(() => {
+      void tick();
+    }, 4000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(handle);
+    };
+  }, [videos]);
 
   return (
     <div className="min-h-dvh bg-[#07080B] text-white">
