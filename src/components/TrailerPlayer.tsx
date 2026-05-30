@@ -52,8 +52,8 @@ export function TrailerPlayer() {
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="grid grid-cols-3 gap-3">
+            <div className="flex w-full flex-col gap-3 lg:w-auto lg:items-end">
+              <div className="grid w-full grid-cols-3 gap-3">
                 {meta.map((m) => (
                   <div
                     key={m.label}
@@ -70,7 +70,7 @@ export function TrailerPlayer() {
 
               <Link
                 href="/studio"
-                className="inline-flex items-center justify-center rounded-2xl bg-[#B6FF3B] px-5 py-3 text-sm font-semibold text-black shadow-[0_10px_40px_rgba(182,255,59,0.2)] transition hover:translate-y-[-1px] hover:bg-[#c7ff63]"
+                className="inline-flex w-full items-center justify-center rounded-2xl bg-[#B6FF3B] px-5 py-3 text-sm font-semibold text-black shadow-[0_10px_40px_rgba(182,255,59,0.2)] transition hover:translate-y-[-1px] hover:bg-[#c7ff63] sm:w-auto"
               >
                 Open Studio
               </Link>
@@ -136,4 +136,3 @@ export function TrailerPlayer() {
     </section>
   );
 }
-
