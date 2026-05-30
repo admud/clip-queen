@@ -8,11 +8,10 @@ import { InputsPanel } from "@/components/studio/InputsPanel";
 import { ViralFeed } from "@/components/studio/ViralFeed";
 import { CtaPreview } from "@/components/studio/CtaPreview";
 import { GeneratedVideos } from "@/components/studio/GeneratedVideos";
-import { ScheduleOutput } from "@/components/studio/ScheduleOutput";
 import { clampPostsPerDay } from "@/components/studio/constants";
 import { downloadJson } from "@/components/studio/utils";
 import { mockClips, niches } from "@/lib/mockClips";
-import type { CtaStyle, GenerateInput, GeneratedVideo, Platform, ScheduleItem } from "@/lib/types";
+import type { CtaStyle, GenerateInput, GeneratedVideo, Platform } from "@/lib/types";
 
 function mapPixverseStatus(status: number | null): GeneratedVideo["status"] {
   if (status === 1) return "ready";
@@ -30,7 +29,6 @@ export function StudioApp() {
   const [ctaText, setCtaText] = useState<string>("Get the app");
   const [ctaStyle, setCtaStyle] = useState<CtaStyle>("bottomBanner");
   const [ctaPrompt, setCtaPrompt] = useState<string>("");
-  const [schedule, setSchedule] = useState<ScheduleItem[] | null>(null);
   const [videos, setVideos] = useState<GeneratedVideo[] | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -130,7 +128,7 @@ export function StudioApp() {
             <div className="text-sm font-semibold tracking-wide">clip-queen Studio</div>
           </div>
           <div className="hidden items-center gap-2 text-xs text-white/60 md:flex">
-            Demo-only: mock clips + exportable schedule plan
+            Demo-only: PixVerse video generation
           </div>
         </div>
       </header>
@@ -158,7 +156,6 @@ export function StudioApp() {
             onCtaPromptChange={(v) => setCtaPrompt(v)}
             isGenerating={isGenerating}
             canGenerate={Boolean(selectedClip?.id)}
-            hasSchedule={Boolean(schedule?.length)}
             hasVideos={Boolean(videos?.length)}
             onGenerate={async () => {
               if (!selectedClip?.id) return;
@@ -170,24 +167,21 @@ export function StudioApp() {
                   body: JSON.stringify(input),
                 });
                 if (!res.ok) throw new Error("generate_failed");
-                const data = (await res.json()) as { schedule: ScheduleItem[]; videos: GeneratedVideo[] };
-                setSchedule(data.schedule);
+                const data = (await res.json()) as { videos: GeneratedVideo[] };
                 setVideos(data.videos);
               } finally {
                 setIsGenerating(false);
               }
             }}
             onExport={() => {
-              if (!schedule?.length && !videos?.length) return;
+              if (!videos?.length) return;
               downloadJson("clip-queen-plan.json", {
                 input,
                 clip: selectedClip ?? null,
-                schedule: schedule ?? [],
                 videos: videos ?? [],
               });
             }}
             onResetOutput={() => {
-              setSchedule(null);
               setVideos(null);
             }}
           />
@@ -201,10 +195,7 @@ export function StudioApp() {
 
             <GeneratedVideos videos={videos} />
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <CtaPreview clip={selectedClip ?? null} ctaText={ctaText} ctaStyle={ctaStyle} />
-              <ScheduleOutput schedule={schedule} postsPerDay={postsPerDay} />
-            </div>
+            <CtaPreview clip={selectedClip ?? null} ctaText={ctaText} ctaStyle={ctaStyle} />
           </section>
         </div>
       </main>

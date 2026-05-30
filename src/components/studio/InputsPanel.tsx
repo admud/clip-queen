@@ -22,7 +22,6 @@ type Props = {
   onCtaPromptChange: (value: string) => void;
   isGenerating: boolean;
   canGenerate: boolean;
-  hasSchedule: boolean;
   hasVideos: boolean;
   onGenerate: () => void | Promise<void>;
   onExport: () => void;
@@ -78,7 +77,7 @@ export function InputsPanel(props: Props) {
         <button
           type="button"
           onClick={props.onResetOutput}
-          disabled={!props.hasSchedule && !props.hasVideos}
+          disabled={!props.hasVideos}
           className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-white/80 transition enabled:hover:border-white/20 enabled:hover:bg-white/[0.06] disabled:opacity-40"
         >
           <RefreshCcw className="h-4 w-4" />
@@ -114,7 +113,7 @@ export function InputsPanel(props: Props) {
 
         <div>
           <div className="text-xs font-semibold uppercase tracking-wide text-white/60">
-            Posts Per Day
+            Videos To Generate
           </div>
           <div className="mt-2 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
             <input
@@ -201,12 +200,12 @@ export function InputsPanel(props: Props) {
             onClick={props.onGenerate}
             className="w-full rounded-2xl bg-[#B6FF3B] px-4 py-3 text-sm font-semibold text-black shadow-[0_10px_40px_rgba(182,255,59,0.18)] transition enabled:hover:translate-y-[-1px] enabled:hover:bg-[#c7ff63] disabled:opacity-50"
           >
-            {props.isGenerating ? "Generating..." : "Generate Plan"}
+            {props.isGenerating ? "Generating..." : "Generate Videos"}
           </button>
 
           <button
             type="button"
-            disabled={!props.hasSchedule && !props.hasVideos}
+            disabled={!props.hasVideos}
             onClick={props.onExport}
             className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white/85 transition enabled:hover:border-white/20 enabled:hover:bg-white/[0.06] disabled:opacity-40"
           >

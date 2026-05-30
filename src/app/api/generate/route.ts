@@ -1,7 +1,6 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 
-import { generateSchedule } from "@/lib/schedule";
 import type {
   GenerateInput,
   GenerateResponse,
@@ -35,9 +34,10 @@ export async function POST(req: Request) {
   }
 
   const input = body as GenerateInput;
-  const schedule = generateSchedule(input);
   const nonce = Date.now();
   const apiKey = process.env.PIXVERSE_API_KEY;
+  const platform = input.platforms[0] ?? "tiktok";
+  const videoCount = Math.max(1, Math.min(5, Math.floor(input.postsPerDay)));
 
   const pixversePrompt = [
     input.prompt.trim()
@@ -48,72 +48,75 @@ export async function POST(req: Request) {
     .filter(Boolean)
     .join("\n");
 
-  const videos: GeneratedVideo[] = await Promise.all(
-    input.platforms.map(async (platform) => {
-      if (!apiKey) {
-        return {
-          id: `v_${platform}_${nonce}`,
-          platform,
-          provider: "demo",
-          providerId: null,
-          status: "ready",
-          url: `/trailer.mp4?p=${platform}&v=${nonce}`,
-          prompt: input.prompt,
-          ctaPrompt: input.ctaPrompt,
-          cta: input.cta,
-        } satisfies GeneratedVideo;
-      }
+  const videos: GeneratedVideo[] = [];
 
-      const res = await fetch(`${pixverseBaseUrl}/openapi/v2/video/text/generate`, {
-        method: "POST",
-        headers: {
-          "API-KEY": apiKey,
-          "Ai-trace-id": randomUUID(),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          aspect_ratio: "9:16",
-          duration: 5,
-          model: "v6",
-          prompt: pixversePrompt,
-          quality: "720p",
-        }),
+  for (let i = 0; i < videoCount; i += 1) {
+    if (!apiKey) {
+      videos.push({
+        id: `v_${platform}_${nonce}_${i}`,
+        platform,
+        provider: "demo",
+        providerId: null,
+        status: "ready",
+        url: `/trailer.mp4?p=${platform}&v=${nonce}&i=${i}`,
+        prompt: input.prompt,
+        ctaPrompt: input.ctaPrompt,
+        cta: input.cta,
       });
+      continue;
+    }
 
-      const json = (await res.json()) as {
-        ErrCode?: number;
-        ErrMsg?: string;
-        Resp?: { video_id?: string };
-      };
+    const res = await fetch(`${pixverseBaseUrl}/openapi/v2/video/text/generate`, {
+      method: "POST",
+      headers: {
+        "API-KEY": apiKey,
+        "Ai-trace-id": randomUUID(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        aspect_ratio: "9:16",
+        duration: 5,
+        model: "v6",
+        prompt: `${pixversePrompt}\n\nVariant: ${i + 1}/${videoCount}`,
+        quality: "720p",
+        seed: nonce + i,
+      }),
+    });
 
-      if (!res.ok || json.ErrCode !== 0 || !json.Resp?.video_id) {
-        return {
-          id: `v_${platform}_${nonce}`,
-          platform,
-          provider: "pixverse",
-          providerId: null,
-          status: "failed",
-          url: null,
-          prompt: input.prompt,
-          ctaPrompt: input.ctaPrompt,
-          cta: input.cta,
-        } satisfies GeneratedVideo;
-      }
+    const json = (await res.json()) as {
+      ErrCode?: number;
+      ErrMsg?: string;
+      Resp?: { video_id?: string };
+    };
 
-      return {
-        id: `v_${platform}_${nonce}`,
+    if (!res.ok || json.ErrCode !== 0 || !json.Resp?.video_id) {
+      videos.push({
+        id: `v_${platform}_${nonce}_${i}`,
         platform,
         provider: "pixverse",
-        providerId: json.Resp.video_id,
-        status: "queued",
+        providerId: null,
+        status: "failed",
         url: null,
         prompt: input.prompt,
         ctaPrompt: input.ctaPrompt,
         cta: input.cta,
-      } satisfies GeneratedVideo;
-    }),
-  );
+      });
+      continue;
+    }
 
-  const response: GenerateResponse = { schedule, videos };
+    videos.push({
+      id: `v_${platform}_${nonce}_${i}`,
+      platform,
+      provider: "pixverse",
+      providerId: json.Resp.video_id,
+      status: "queued",
+      url: null,
+      prompt: input.prompt,
+      ctaPrompt: input.ctaPrompt,
+      cta: input.cta,
+    });
+  }
+
+  const response: GenerateResponse = { schedule: [], videos };
   return NextResponse.json(response);
 }
