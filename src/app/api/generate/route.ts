@@ -86,10 +86,17 @@ export async function POST(req: Request) {
     const json = (await res.json()) as {
       ErrCode?: number;
       ErrMsg?: string;
-      Resp?: { video_id?: string };
+      Resp?: { video_id?: number | string };
     };
 
-    if (!res.ok || json.ErrCode !== 0 || !json.Resp?.video_id) {
+    const videoId = json.Resp?.video_id;
+
+    if (!res.ok || json.ErrCode !== 0 || videoId === undefined || videoId === null) {
+      console.error("pixverse_text_generate_failed", {
+        httpStatus: res.status,
+        errCode: json.ErrCode ?? null,
+        errMsg: json.ErrMsg ?? null,
+      });
       videos.push({
         id: `v_${platform}_${nonce}_${i}`,
         platform,
@@ -97,6 +104,11 @@ export async function POST(req: Request) {
         providerId: null,
         status: "failed",
         url: null,
+        error: {
+          httpStatus: res.status,
+          code: json.ErrCode ?? null,
+          message: json.ErrMsg ?? null,
+        },
         prompt: input.prompt,
         ctaPrompt: input.ctaPrompt,
         cta: input.cta,
@@ -108,7 +120,7 @@ export async function POST(req: Request) {
       id: `v_${platform}_${nonce}_${i}`,
       platform,
       provider: "pixverse",
-      providerId: json.Resp.video_id,
+      providerId: String(videoId),
       status: "queued",
       url: null,
       prompt: input.prompt,

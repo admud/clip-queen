@@ -14,10 +14,14 @@ import { mockClips, niches } from "@/lib/mockClips";
 import type { CtaStyle, GenerateInput, GeneratedVideo, Platform } from "@/lib/types";
 
 function mapPixverseStatus(status: number | null): GeneratedVideo["status"] {
+  if (status === null) return "queued";
+  if (status === 0) return "queued";
   if (status === 1) return "ready";
   if (status === 5) return "generating";
+  if (status === 6) return "failed";
   if (status === 7) return "moderation_failed";
-  return "failed";
+  if (status === 8) return "failed";
+  return "queued";
 }
 
 export function StudioApp() {

@@ -55,6 +55,10 @@ export function GeneratedVideos({ videos }: Props) {
 
               <div className="mt-2 text-xs text-white/55 line-clamp-3">{video.prompt}</div>
 
+              {video.provider === "pixverse" && video.status === "failed" && video.error?.message ? (
+                <div className="mt-3 text-xs text-white/70 line-clamp-2">{video.error.message}</div>
+              ) : null}
+
               {video.provider === "pixverse" && video.providerId ? (
                 <div className="mt-3 font-mono text-[11px] text-white/55">{video.providerId}</div>
               ) : null}

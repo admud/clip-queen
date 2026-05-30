@@ -61,6 +61,11 @@ export type GeneratedVideo = {
   providerId: string | null;
   status: GeneratedVideoStatus;
   url: string | null;
+  error?: {
+    httpStatus?: number;
+    code?: number | null;
+    message?: string | null;
+  };
   prompt: string;
   ctaPrompt: string;
   cta: Cta;
