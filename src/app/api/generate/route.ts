@@ -9,6 +9,7 @@ import type {
 } from "@/lib/types";
 
 const pixverseBaseUrl = "https://app-api.pixverse.ai";
+const demoVideoUrls = ["/fitness1.mp4", "/fitness2.mp4", "/fitness3.mp4", "/fitness4.mp4"];
 
 function isPlatform(value: unknown): value is Platform {
   return value === "tiktok" || value === "instagram" || value === "youtube";
@@ -77,6 +78,7 @@ export async function POST(req: Request) {
 
   for (let i = 0; i < videoCount; i += 1) {
     const scenePrompt = prompts[i] ? prompts[i] : pixversePrompt;
+    const demoUrl = demoVideoUrls[i % demoVideoUrls.length] ?? demoVideoUrls[0]!;
     if (!apiKey) {
       videos.push({
         id: `v_${platform}_${nonce}_${i}`,
@@ -84,7 +86,7 @@ export async function POST(req: Request) {
         provider: "demo",
         providerId: null,
         status: "ready",
-        url: `/trailer.mp4?p=${platform}&v=${nonce}&i=${i}`,
+        url: demoUrl,
         prompt: input.prompt,
         ctaPrompt: input.ctaPrompt,
         cta: input.cta,
@@ -132,7 +134,7 @@ export async function POST(req: Request) {
           provider: "demo",
           providerId: null,
           status: "ready",
-          url: `/trailer.mp4?p=${platform}&v=${nonce}&i=${i}`,
+          url: demoUrl,
           error: {
             httpStatus: res.status,
             code: json.ErrCode ?? null,
